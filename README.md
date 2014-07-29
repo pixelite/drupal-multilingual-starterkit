@@ -13,4 +13,5 @@ Usage
 Install Drupal 7 as normal. In the root of your project, run the following:
 
 cd profiles
+
 git clone git@github.com:pixelite/drupal-multilingual-starterkit.git multilingual_starterkit
