@@ -1,0 +1,5 @@
+name = Multilingual Starterkit Views
+description = Provides default views for the multilingual starterkit module
+core = 7.x
+dependencies[] = views
+package = Multilingual Starterkit
