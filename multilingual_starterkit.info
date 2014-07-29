@@ -37,7 +37,6 @@ dependencies[] = date_views
 dependencies[] = diff
 dependencies[] = entity
 dependencies[] = entity_translation
-dependencies[] = features
 dependencies[] = i18n
 dependencies[] = i18n_menu
 dependencies[] = i18n_variable
