@@ -12,10 +12,10 @@ projects[admin_menu][version] = "3.0-rc4"
 projects[admin_menu][subdir] = "contrib"
 
 projects[admin_views][version] = "1.3"
-projects[admin_views][version] = "contrib"
+projects[admin_views][subdir] = "contrib"
 
 projects[ctools][version] = "1.4"
-projects[ctools][version] = "contrib"
+projects[ctools][subdir] = "contrib"
 
 projects[context][version] = "3.2"
 projects[context][subdir] = "contrib"
