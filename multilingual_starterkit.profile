@@ -269,6 +269,10 @@ function _multilingual_starterkit_create_node($page_type) {
     $node->body[$langcode][0]['value'] = 'The body of the node in ' . $language;
     $node->body[$langcode][0]['format'] = 'full_html';
   }
+  if ($page_type == 'event') {
+    // Set the event date to be one week from now
+    $node->field_date['und'][0]['value'] = time() + 604800;
+  }
   $node->uid = 1;
   $node->type = $page_type;
   $node->status = 1;
