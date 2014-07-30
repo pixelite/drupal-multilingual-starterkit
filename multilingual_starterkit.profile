@@ -30,17 +30,17 @@ function multilingual_starterkit_install_tasks($install_state) {
       'run' => INSTALL_TASK_RUN_IF_NOT_COMPLETED,
       'type' => 'batch',
     ),
-    'multilingual_starterkit_site_info' => array(
-      'display_name' => st('Multilingual site info'),
-      'display' => TRUE,
-      'run' => INSTALL_TASK_RUN_IF_NOT_COMPLETED,
-      'type' => 'form',
-    ),
     'multilingual_starterkit_sample_content' => array(
       'display_name' => st('Add sample content'),
       'display' => TRUE,
       'run' => INSTALL_TASK_RUN_IF_NOT_COMPLETED,
       'type' => 'normal',
+    ),
+    'multilingual_starterkit_site_info' => array(
+      'display_name' => st('Multilingual site info'),
+      'display' => TRUE,
+      'run' => INSTALL_TASK_RUN_IF_NOT_COMPLETED,
+      'type' => 'form',
     ),
   );
 }
@@ -226,7 +226,23 @@ function multilingual_starterkit_site_info_submit($form, &$form_state) {
     //Set up translations for 'Articles' and 'Events'
     _multilingual_starterkit_translate_string($langcode, '', 'Articles', $article_label, 'default');
     _multilingual_starterkit_translate_string($langcode, '', 'Events', $event_label, 'default');
+
+    //Set up path aliases for Articles and Events paths
+    _multilingual_starterkit_create_url_alias('articles', strtolower(transliteration_get($article_label)), $langcode);
+    _multilingual_starterkit_create_url_alias('events', strtolower(transliteration_get($event_label)), $langcode);
+
+    // Update the menu router information.
+    menu_rebuild();
+    cache_clear_all();
+
+    //Add menu items for 'articles' and 'events' Views
+    _multilingual_starterkit_create_menu_item($langcode, drupal_get_path_alias('articles', $langcode), $article_label);
+    _multilingual_starterkit_create_menu_item($langcode, drupal_get_path_alias('events', $langcode), $event_label);
+
+    // Update the menu router information.
+    menu_rebuild();
   }
+
 }
 /**
 * Installation step callback.
@@ -248,7 +264,6 @@ function multilingual_starterkit_sample_content(&$install_state) {
   if ($event_node = _multilingual_starterkit_create_node('event')) {
     node_save($event_node);
   }
-  _multilingual_starterkit_create_menu_items();
 }
 
 /**
@@ -280,37 +295,34 @@ function _multilingual_starterkit_create_node($page_type) {
 }
 
 /*
- * Helper function to set up menu paths for articles and events Views
+ * Helper function to set up menu links for articles and events Views
  */
-function _multilingual_starterkit_create_menu_items() {
-  $items = array(
-    array(
-      'link_title' => st('Home'),
-      'link_path' => '<front>',
-      'menu_name' => 'main-menu',
-      'weight' => 0,
-    ),
-    array(
-      'link_path' => drupal_get_normal_path('articles'),
-      'link_title' => st('Articles'),
-      'menu_name' => 'main-menu',
-      'weight' => 1,
-    ),
-    array(
-      'link_path' => drupal_get_normal_path('events'),
-      'link_title' => st('Events'),
-      'menu_name' => 'main-menu',
-      'weight' => 2,
-    ),
+function _multilingual_starterkit_create_menu_item($langcode, $link_path, $link_title) {
+
+  $item = array(
+    'link_path' => $link_path,
+    'link_title' => $link_title,
+    'menu_name' => 'main-menu',
+    'language' => $langcode,
   );
 
   //Create menu items
-  foreach ($items as $item) {
     menu_link_save($item);
-  }
+}
 
-  // Update the menu router information.
-  menu_rebuild();
+/*
+ * Helper function to set up url aliases.
+ */
+function _multilingual_starterkit_create_url_alias($source, $alias, $langcode) {
+
+  db_insert('url_alias')
+    ->fields(array(
+      'source' => $source, 
+      'alias' => $alias,
+      'language' => $langcode,
+    ))
+    ->execute();
+
 }
 
 /*
