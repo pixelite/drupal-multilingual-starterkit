@@ -278,19 +278,36 @@ function _multilingual_starterkit_create_node($page_type) {
   $installed_languages = locale_language_list('native');
 
   $node = new stdClass();
+  $node->uid = 1;
+  $node->type = $page_type;
+  $node->status = 1;
+
   foreach ($installed_languages as $langcode => $language) {
     $node->title_field[$langcode][0]['value'] = 'Title of the ' . $page_type . ' in ' . $language;
     $node->body[$langcode][0]['value'] = 'The body of the node in ' . $language;
     $node->body[$langcode][0]['value'] = 'The body of the node in ' . $language;
     $node->body[$langcode][0]['format'] = 'full_html';
+
+    $handler = entity_translation_get_handler('node', $node);
+
+    //TODO: Change this from 'en' to the default language.
+    if ($langcode != 'en') {
+      $source = 'en';
+    } else {
+      $source = '';
+    }
+    $translation = array(
+      'translate' => 0,
+      'status' => 1,
+      'language' => $langcode,
+      'source' => $source,
+    );
+    $handler->setTranslation($translation, $node);
   }
   if ($page_type == 'event') {
     // Set the event date to be one week from now
     $node->field_date['und'][0]['value'] = time() + 604800;
   }
-  $node->uid = 1;
-  $node->type = $page_type;
-  $node->status = 1;
   return $node;
 }
 
