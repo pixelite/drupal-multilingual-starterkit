@@ -227,17 +227,15 @@ function multilingual_starterkit_site_info_submit($form, &$form_state) {
     _multilingual_starterkit_translate_string($langcode, '', 'Articles', $article_label, 'default');
     _multilingual_starterkit_translate_string($langcode, '', 'Events', $event_label, 'default');
 
-    //Set up path aliases for Articles and Events paths
+    //Set up URL aliases for the Views
     _multilingual_starterkit_create_url_alias('articles', strtolower(transliteration_get($article_label)), $langcode);
     _multilingual_starterkit_create_url_alias('events', strtolower(transliteration_get($event_label)), $langcode);
 
-    // Update the menu router information.
-    menu_rebuild();
-    cache_clear_all();
-
-    //Add menu items for 'articles' and 'events' Views
-    _multilingual_starterkit_create_menu_item($langcode, drupal_get_path_alias('articles', $langcode), $article_label);
-    _multilingual_starterkit_create_menu_item($langcode, drupal_get_path_alias('events', $langcode), $event_label);
+    //Add menu items for 'articles' and 'events' Views. It's not possible to
+    //use the alias for these menu items due to issue:
+    //https://api.drupal.org/api/drupal/includes%21menu.inc/function/menu_link_save/7
+    _multilingual_starterkit_create_menu_item($langcode, 'articles', $article_label);
+    _multilingual_starterkit_create_menu_item($langcode, 'events', $event_label);
 
     // Update the menu router information.
     menu_rebuild();
@@ -319,10 +317,10 @@ function _multilingual_starterkit_create_menu_item($langcode, $link_path, $link_
     'link_title' => $link_title,
     'menu_name' => 'main-menu',
     'language' => $langcode,
+    'customized' => 1,
   );
+  menu_link_save($item);
 
-  //Create menu items
-    menu_link_save($item);
 }
 
 /*
