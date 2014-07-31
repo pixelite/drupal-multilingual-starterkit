@@ -1,9 +1,9 @@
 core = 7.x
-
 api = 2
-projects[drupal][version] = "7.x"
 
 ; Modules
+
+projects[drupal][version] = "7.30"
 
 projects[views_bulk_operations][version] = "3.2"
 projects[views_bulk_operations][subdir] = "contrib"
