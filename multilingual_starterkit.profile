@@ -276,6 +276,7 @@ function _multilingual_starterkit_create_node($page_type) {
 
   include_once DRUPAL_ROOT . '/includes/locale.inc';
   $installed_languages = locale_language_list('native');
+  $default_language =  language_default()->language;
 
   $node = new stdClass();
   $node->uid = 1;
@@ -290,12 +291,9 @@ function _multilingual_starterkit_create_node($page_type) {
 
     $handler = entity_translation_get_handler('node', $node);
 
-    //TODO: Change this from 'en' to the default language.
-    if ($langcode != 'en') {
-      $source = 'en';
-    } else {
-      $source = '';
-    }
+    //Set the source language to the default language, unless the content is in the default language
+    $source = ($default_language == $langcode) ? '' : $default_language;
+
     $translation = array(
       'translate' => 0,
       'status' => 1,
