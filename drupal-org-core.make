@@ -53,3 +53,11 @@ projects[variable][subdir] = "contrib"
 projects[views][version] = "3.8"
 projects[views][subdir] = "contrib"
 
+projects[webform][version] = "3.2"
+projects[webform][subdir] = "contrib"
+
+projects[ckeditor][version] = "2.2"
+projects[ckeditor][subdir] = "contrib"
+
+projects[google_analytics][version] = "2.0"
+projects[google_analytics][subdir] = "contrib"

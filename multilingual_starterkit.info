@@ -29,12 +29,14 @@ dependencies[] = rdf
 dependencies[] = admin_menu
 dependencies[] = admin_menu_toolbar
 dependencies[] = admin_views
+dependencies[] = ckeditor
 dependencies[] = context
 dependencies[] = ctools
 dependencies[] = date
 dependencies[] = date_views
 dependencies[] = entity
 dependencies[] = entity_translation
+dependencies[] = googleanalytics
 dependencies[] = i18n
 dependencies[] = i18n_menu
 dependencies[] = i18n_variable
@@ -50,6 +52,7 @@ dependencies[] = variable
 dependencies[] = views
 dependencies[] = views_ui
 dependencies[] = views_bulk_operations
+dependencies[] = webform
 
 ;Custom Dependencies
 dependencies[] = multilingual_starterkit_views
