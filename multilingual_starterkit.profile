@@ -27,7 +27,7 @@ function multilingual_starterkit_install_tasks($install_state) {
     'multilingual_starterkit_import_translation' => array(
       'display_name' => st('Set up translations'),
       'display' => TRUE,
-      'run' => INSTALL_TASK_SKIP,
+      'run' => INSTALL_TASK_RUN_IF_NOT_COMPLETED,
       'type' => 'batch',
     ),
     'multilingual_starterkit_sample_content' => array(
