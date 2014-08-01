@@ -27,7 +27,7 @@ function multilingual_starterkit_install_tasks($install_state) {
     'multilingual_starterkit_import_translation' => array(
       'display_name' => st('Set up translations'),
       'display' => TRUE,
-      'run' => INSTALL_TASK_RUN_IF_NOT_COMPLETED,
+      'run' => INSTALL_TASK_SKIP,
       'type' => 'batch',
     ),
     'multilingual_starterkit_sample_content' => array(
@@ -234,8 +234,8 @@ function multilingual_starterkit_site_info_submit($form, &$form_state) {
     //Add menu items for 'articles' and 'events' Views. It's not possible to
     //use the alias for these menu items due to issue:
     //https://api.drupal.org/api/drupal/includes%21menu.inc/function/menu_link_save/7
-    _multilingual_starterkit_create_menu_item($langcode, 'articles', $article_label);
-    _multilingual_starterkit_create_menu_item($langcode, 'events', $event_label);
+    _multilingual_starterkit_create_menu_item($langcode, 'articles', $article_label, 0);
+    _multilingual_starterkit_create_menu_item($langcode, 'events', $event_label, 0);
 
     // Update the menu router information.
     menu_rebuild();
@@ -252,15 +252,42 @@ function multilingual_starterkit_site_info_submit($form, &$form_state) {
 *   An array of information about the current installation state.
 */
 function multilingual_starterkit_sample_content(&$install_state) {
+  //Create a page and set it to be the homepage of the website
   if ($welcome_node = _multilingual_starterkit_create_node('page')) {
-    node_save($welcome_node);
     variable_set('site_frontpage', 'node/' . $welcome_node->nid);
   }
-  if ($article_node = _multilingual_starterkit_create_node('article')) {
-    node_save($article_node);
-  }
-  if ($event_node = _multilingual_starterkit_create_node('event')) {
-    node_save($event_node);
+
+  //Create an article and event node
+  $article_node = _multilingual_starterkit_create_node('article');
+  $event_node = _multilingual_starterkit_create_node('event');
+
+  //Create a webform in each language (this uses content translation)
+  $installed_languages = locale_language_list();
+  $default_language =  language_default()->language;
+
+  //Create the webform in the default language
+  $default_webform = _multilingual_starterkit_create_webform($default_language);
+  node_save($default_webform);
+
+  //Set the translation node ID (tnid) to be the same as the node ID.
+  //Running node_save again here causes an issue with webform components not having the correct ID set.
+  db_update('node')
+    ->fields(array(
+      'tnid' => $default_webform->nid
+      ))
+    ->condition('nid', $default_webform->nid)
+    ->execute();
+
+  _multilingual_starterkit_create_menu_item($default_language, 'node/' . $default_webform->nid, st('Contact us'), 10);
+
+  //Create webform translation nodes
+  foreach ($installed_languages as $langcode => $language) {
+    if ($langcode != $default_language) {
+      $webform = _multilingual_starterkit_create_webform($langcode);
+      $webform->tnid = $default_webform->nid;
+      node_save($webform);
+      _multilingual_starterkit_create_menu_item($langcode, 'node/' . $webform->nid, st('Contact us'), 10);
+    }
   }
 }
 
@@ -272,7 +299,6 @@ function multilingual_starterkit_sample_content(&$install_state) {
  */
 function _multilingual_starterkit_create_node($page_type) {
 
-  include_once DRUPAL_ROOT . '/includes/locale.inc';
   $installed_languages = locale_language_list('native');
   $default_language =  language_default()->language;
 
@@ -300,17 +326,86 @@ function _multilingual_starterkit_create_node($page_type) {
     );
     $handler->setTranslation($translation, $node);
   }
+
   if ($page_type == 'event') {
     // Set the event date to be one week from now
     $node->field_date['und'][0]['value'] = time() + 604800;
   }
+
+  node_save($node);
+  return $node;
+}
+
+function _multilingual_starterkit_create_webform($langcode) {
+  $node = new stdClass();
+  $node->uid = 1;
+  $node->type = 'webform';
+  $node->status = 1;
+  $node->title = st('Contact us');
+  $node->language = $langcode;
+  //Add name, email, message fields
+  $components = array(
+    array(
+      'form_key' => 'your_name',
+      'name' => st('Your name'),
+      'type' => 'textfield',
+    ),
+    array(
+      'form_key' => 'your_email',
+      'name' => st('Your email'),
+      'type' => 'email',
+    ),
+    array(
+      'form_key' => 'message',
+      'name' => st('Message'),
+      'type' => 'textarea',
+    ),
+  );
+  include_once DRUPAL_ROOT . '/sites/all/modules/contrib/webform/includes/webform.components.inc';
+  foreach($components as &$component) {
+      webform_component_defaults($component);
+  }
+  // Setup notification email.
+  $emails = array(
+    array(
+      'email' => variable_get('site_mail', ''),
+      'subject' => 'default',
+      'from_name' => 'default',
+      'from_address' => 'default',
+      'template' => 'default',
+      'excluded_components' => array(),
+    ),
+  );
+  // Attach the webform to the node.
+  $node->webform = array(
+    'confirmation' => '',
+    'confirmation_format' => NULL,
+    'redirect_url' => '<confirmation>',
+    'status' => '1',
+    'block' => '0',
+    'teaser' => '0',
+    'allow_draft' => '0',
+    'auto_save' => '0',
+    'submit_notice' => '1',
+    'submit_text' => '',
+    'submit_limit' => '-1', // User can submit more than once.
+    'submit_interval' => '-1',
+    'total_submit_limit' => '-1',
+    'total_submit_interval' => '-1',
+    'record_exists' => TRUE,
+    'roles' => array(
+      0 => '1', // Anonymous user can submit this webform.
+    ),
+    'emails' => $emails,
+    'components' => $components,
+  );
   return $node;
 }
 
 /*
  * Helper function to set up menu links for articles and events Views
  */
-function _multilingual_starterkit_create_menu_item($langcode, $link_path, $link_title) {
+function _multilingual_starterkit_create_menu_item($langcode, $link_path, $link_title, $weight) {
 
   $item = array(
     'link_path' => $link_path,
@@ -318,6 +413,7 @@ function _multilingual_starterkit_create_menu_item($langcode, $link_path, $link_
     'menu_name' => 'main-menu',
     'language' => $langcode,
     'customized' => 1,
+    'weight' => $weight,
   );
   menu_link_save($item);
 

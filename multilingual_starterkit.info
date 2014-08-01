@@ -7,6 +7,7 @@ version = 0.1
 dependencies[] = block
 dependencies[] = color
 dependencies[] = comment
+dependencies[] = translation
 dependencies[] = contextual
 dependencies[] = dashboard
 dependencies[] = help
@@ -52,7 +53,6 @@ dependencies[] = variable
 dependencies[] = views
 dependencies[] = views_ui
 dependencies[] = views_bulk_operations
-dependencies[] = webform
 
 ;Custom Dependencies
 dependencies[] = multilingual_starterkit_views

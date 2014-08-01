@@ -13,6 +13,9 @@
   */
 
 function multilingual_starterkit_install() {
+  //Enabling the webform module here, so that we can set the variable to exclude the body field first. 
+  variable_set('webform_install_add_body_field', FALSE);
+  module_enable(array('webform'), FALSE);
 
   // Add text formats.
   $filtered_html_format = array(
@@ -544,6 +547,52 @@ function multilingual_starterkit_install() {
   );
   field_create_instance($instance);
 
+  //Set up field instance: body for webform
+  $instance = array(
+    'bundle' => 'webform',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'hidden',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 0,
+      ),
+      'teaser' => array(
+        'label' => 'hidden',
+        'module' => 'text',
+        'settings' => array(
+          'trim_length' => 600,
+        ),
+        'type' => 'text_summary_or_trimmed',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'node',
+    'field_name' => 'body',
+    'label' => 'Body',
+    'required' => FALSE,
+    'settings' => array(
+      'display_summary' => TRUE,
+      'entity_translation_sync' => FALSE,
+      'text_processing' => 1,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'module' => 'text',
+      'settings' => array(
+        'rows' => 20,
+        'summary_rows' => 5,
+      ),
+      'type' => 'text_textarea_with_summary',
+      'weight' => -4,
+    ),
+  );
+  field_create_instance($instance);
+
   // field_base: 'title'
   $field = array(
     'active' => 1,
@@ -822,9 +871,17 @@ function multilingual_starterkit_install() {
   variable_set('admin_theme', 'seven');
   variable_set('node_admin_theme', '1');
 
+  //Turn on entity translation for articles, events, and pages
   variable_set('language_content_type_article', 4);
   variable_set('language_content_type_event', 4);
   variable_set('language_content_type_page', 4);
+
+  //Enable content translation for webform content type
+  variable_set('language_content_type_webform', 2);
+
+  //Turn off comments on events and webforms
+  variable_set('comment_event', 0);
+  variable_set('comment_webform', 0);
 
   #Set the language negotiation UI detection to use the URL/browser/default
   $language_negotiation_language = array('locale-url' => array('callbacks' => array('language' => 'locale_language_from_url', 'switcher' => 'locale_language_switcher_url', 'url_rewrite' => 'locale_language_url_rewrite_url'), 'file' => 'includes/locale.inc'), 'locale-browser' => array('callbacks' => array('language' => 'locale_language_from_browser'), 'file' => 'includes/locale.inc', 'cache' => 0), 'language-default' => array('callbacks' => array('language' => 'language_from_default')));
