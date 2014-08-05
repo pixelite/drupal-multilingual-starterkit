@@ -42,6 +42,12 @@ function multilingual_starterkit_install_tasks($install_state) {
       'run' => INSTALL_TASK_RUN_IF_NOT_COMPLETED,
       'type' => 'form',
     ),
+    'multilingual_starterkit_sample_webforms' => array(
+      'display_name' => st('Multilingual webforms'),
+      'display' => TRUE,
+      'run' => INSTALL_TASK_RUN_IF_NOT_COMPLETED,
+      'type' => 'form',
+    ),
   );
 }
 
@@ -164,13 +170,13 @@ function multilingual_starterkit_site_info($form, &$form_state, &$install_state)
     $form[$langcode]['site_name_' . $langcode] = array(
       '#title' => $language . ' ' . st('Site name'),
       '#type' => 'textfield',
-      '#default_value' => st('%language website', array('%language' => $language)),
+      '#default_value' => st('!language website', array('%language' => $language)),
       '#required' => TRUE,
     );
     $form[$langcode]['site_slogan_' . $langcode] = array(
       '#title' => $language . ' ' . st('Site slogan'),
       '#type' => 'textfield',
-      '#default_value' => st('%language multilingual slogan', array('%language' => $language)),
+      '#default_value' => st('!language multilingual slogan', array('%language' => $language)),
       '#required' => TRUE,
     );
     $form[$langcode]['article_label_' . $langcode] = array(
@@ -234,12 +240,117 @@ function multilingual_starterkit_site_info_submit($form, &$form_state) {
     //Add menu items for 'articles' and 'events' Views. It's not possible to
     //use the alias for these menu items due to issue:
     //https://api.drupal.org/api/drupal/includes%21menu.inc/function/menu_link_save/7
-    _multilingual_starterkit_create_menu_item($langcode, 'articles', $article_label, 0);
-    _multilingual_starterkit_create_menu_item($langcode, 'events', $event_label, 0);
+    _multilingual_starterkit_create_menu_item($langcode, 'articles', $article_label, 0, 0);
+    _multilingual_starterkit_create_menu_item($langcode, 'events', $event_label, 0, 0);
 
     // Update the menu router information.
     menu_rebuild();
   }
+
+}
+/**
+* Installation step callback.
+* 
+* Allows site admin to enter basic info for the website in each chosen language.
+*
+* @param $install_state
+*   An array of information about the current installation state.
+*
+*/
+function multilingual_starterkit_sample_webforms($form, &$form_state, &$install_state) {
+  $form = array();
+
+  include_once DRUPAL_ROOT . '/includes/locale.inc';
+  $installed_languages = locale_language_list('name');
+
+  foreach ($installed_languages as $langcode => $language) {
+    $form[$langcode] = array(
+      '#type' => 'fieldset',
+      '#title' => st('%language Webform Settings', array('%language' => $language)),
+    );
+    $form[$langcode]['contact_form_title_' . $langcode] = array(
+      '#title' => st('Translation of "Contact Us" in %language', array('%language' => $language)),
+      '#type' => 'textfield',
+      '#default_value' => st('Contact Us'),
+      '#required' => TRUE,
+    );
+    $form[$langcode]['contact_form_name_label_' . $langcode] = array(
+      '#title' => st('Translation of "Your name" in %language', array('%language' => $language)),
+      '#type' => 'textfield',
+      '#default_value' => st('Your name'),
+      '#required' => TRUE,
+    );
+    $form[$langcode]['contact_form_email_label_' . $langcode] = array(
+      '#title' => st('Translation of "Your email" in %language', array('%language' => $language)),
+      '#type' => 'textfield',
+      '#default_value' => st('Your email'),
+      '#required' => TRUE,
+    );
+    $form[$langcode]['contact_form_message_label_' . $langcode] = array(
+      '#title' => st('Translation of "Message" in %language', array('%language' => $language)),
+      '#type' => 'textfield',
+      '#default_value' => st('Message'),
+      '#required' => TRUE,
+    );
+  }
+  $form['actions'] = array(
+    '#type' => 'actions'
+  );
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => st('Select'),
+  );
+  return $form;
+}
+/**
+ * Task callback: Multilingual Info Submit
+ *
+ * Submit handler for the multilingual info form.
+ * Assigns multilingual info to variables, and creates translations.
+ *
+ */
+function multilingual_starterkit_sample_webforms_submit($form, &$form_state) {
+  include_once DRUPAL_ROOT . '/includes/locale.inc';
+
+  //Create a webform in each language (this uses content translation)
+  $installed_languages = locale_language_list();
+  $default_language =  language_default()->language;
+
+  //Create the webform in the default language
+  $default_webform = _multilingual_starterkit_create_webform($default_language, $form_state['values']);
+  node_save($default_webform);
+
+  //Set the translation node ID (tnid) to be the same as the node ID.
+  //Running node_save again here causes an issue with webform components not having the correct ID set.
+  db_update('node')
+    ->fields(array(
+      'tnid' => $default_webform->nid
+      ))
+    ->condition('nid', $default_webform->nid)
+    ->execute();
+
+  //Create a path translation set between the webform paths. TODO: Figure out why this doesn't work.
+  db_insert('i18n_translation_set')
+    ->fields(array(
+      'type' => 'menu_link',
+      'created' => time(),
+      'changed' => time(),
+      'status' => 0,
+      ))
+    ->execute();
+
+  _multilingual_starterkit_create_menu_item($default_language, 'node/' . $default_webform->nid, $form_state['values']['contact_form_title_' . $default_language], 10, 1);
+
+  //Create webform translation nodes
+  foreach ($installed_languages as $langcode => $language) {
+    if ($langcode != $default_language) {
+      $webform = _multilingual_starterkit_create_webform($langcode, $form_state['values']);
+      $webform->tnid = $default_webform->nid;
+      node_save($webform);
+      _multilingual_starterkit_create_menu_item($langcode, 'node/' . $webform->nid, $form_state['values']['contact_form_title_' . $langcode], 10, 1);
+    }
+  }
+  menu_rebuild();
 
 }
 /**
@@ -261,34 +372,6 @@ function multilingual_starterkit_sample_content(&$install_state) {
   $article_node = _multilingual_starterkit_create_node('article');
   $event_node = _multilingual_starterkit_create_node('event');
 
-  //Create a webform in each language (this uses content translation)
-  $installed_languages = locale_language_list();
-  $default_language =  language_default()->language;
-
-  //Create the webform in the default language
-  $default_webform = _multilingual_starterkit_create_webform($default_language);
-  node_save($default_webform);
-
-  //Set the translation node ID (tnid) to be the same as the node ID.
-  //Running node_save again here causes an issue with webform components not having the correct ID set.
-  db_update('node')
-    ->fields(array(
-      'tnid' => $default_webform->nid
-      ))
-    ->condition('nid', $default_webform->nid)
-    ->execute();
-
-  _multilingual_starterkit_create_menu_item($default_language, 'node/' . $default_webform->nid, st('Contact us'), 10);
-
-  //Create webform translation nodes
-  foreach ($installed_languages as $langcode => $language) {
-    if ($langcode != $default_language) {
-      $webform = _multilingual_starterkit_create_webform($langcode);
-      $webform->tnid = $default_webform->nid;
-      node_save($webform);
-      _multilingual_starterkit_create_menu_item($langcode, 'node/' . $webform->nid, st('Contact us'), 10);
-    }
-  }
 }
 
 /**
@@ -336,28 +419,34 @@ function _multilingual_starterkit_create_node($page_type) {
   return $node;
 }
 
-function _multilingual_starterkit_create_webform($langcode) {
+function _multilingual_starterkit_create_webform($langcode, $values) {
+  $title = $values['contact_form_title_' . $langcode];
+  $name = $values['contact_form_name_label_' . $langcode];
+  $email = $values['contact_form_email_label_' . $langcode];
+  $message = $values['contact_form_message_label_' . $langcode];
+
   $node = new stdClass();
   $node->uid = 1;
   $node->type = 'webform';
   $node->status = 1;
-  $node->title = st('Contact us');
+  $node->title = $title;
   $node->language = $langcode;
+
   //Add name, email, message fields
   $components = array(
     array(
       'form_key' => 'your_name',
-      'name' => st('Your name'),
+      'name' => $name,
       'type' => 'textfield',
     ),
     array(
       'form_key' => 'your_email',
-      'name' => st('Your email'),
+      'name' => $email,
       'type' => 'email',
     ),
     array(
       'form_key' => 'message',
-      'name' => st('Message'),
+      'name' => $message,
       'type' => 'textarea',
     ),
   );
@@ -405,7 +494,7 @@ function _multilingual_starterkit_create_webform($langcode) {
 /*
  * Helper function to set up menu links for articles and events Views
  */
-function _multilingual_starterkit_create_menu_item($langcode, $link_path, $link_title, $weight) {
+function _multilingual_starterkit_create_menu_item($langcode, $link_path, $link_title, $weight, $tsid) {
 
   $item = array(
     'link_path' => $link_path,
@@ -414,6 +503,7 @@ function _multilingual_starterkit_create_menu_item($langcode, $link_path, $link_
     'language' => $langcode,
     'customized' => 1,
     'weight' => $weight,
+    'i18n_tsid' => $tsid,
   );
   menu_link_save($item);
 
