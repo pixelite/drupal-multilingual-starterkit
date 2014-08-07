@@ -74,7 +74,8 @@ function multilingual_starterkit_install() {
   filter_format_save($full_html_format);
 
   // Enable some standard blocks.
-  $default_theme = variable_get('theme_default', 'bartik');
+  variable_set('theme_default', 'pixels');
+  $default_theme = 'pixels';
   $admin_theme = 'seven';
   $blocks = array(
     array(
@@ -86,6 +87,7 @@ function multilingual_starterkit_install() {
       'region' => 'content',
       'pages' => '',
       'cache' => -1,
+      'title' => '<none>',
     ),
     array(
       'module' => 'search',
@@ -93,39 +95,10 @@ function multilingual_starterkit_install() {
       'theme' => $default_theme,
       'status' => 1,
       'weight' => -1,
-      'region' => 'sidebar_first',
+      'region' => 'footer',
       'pages' => '',
       'cache' => -1,
-    ),
-    array(
-      'module' => 'node',
-      'delta' => 'recent',
-      'theme' => $admin_theme,
-      'status' => 1,
-      'weight' => 10,
-      'region' => 'dashboard_main',
-      'pages' => '',
-      'cache' => -1,
-    ),
-    array(
-      'module' => 'user',
-      'delta' => 'login',
-      'theme' => $default_theme,
-      'status' => 1,
-      'weight' => 0,
-      'region' => 'sidebar_first',
-      'pages' => '',
-      'cache' => -1,
-    ),
-    array(
-      'module' => 'system',
-      'delta' => 'navigation',
-      'theme' => $default_theme,
-      'status' => 1,
-      'weight' => 0,
-      'region' => 'sidebar_first',
-      'pages' => '',
-      'cache' => -1,
+      'title' => '',
     ),
     array(
       'module' => 'locale',
@@ -136,6 +109,40 @@ function multilingual_starterkit_install() {
       'region' => 'header',
       'pages' => '',
       'cache' => -1,
+      'title' => '<none>',
+    ),
+    array(
+      'module' => 'multilingual_starterkit_setup',
+      'delta' => 'banner',
+      'theme' => $default_theme,
+      'status' => 1,
+      'weight' => 0,
+      'region' => 'highlighted',
+      'pages' => '',
+      'cache' => -1,
+      'title' => '',
+    ),
+    array(
+      'module' => 'multilingual_starterkit_setup',
+      'delta' => 'footer_text',
+      'theme' => $default_theme,
+      'status' => 1,
+      'weight' => 0,
+      'region' => 'footer',
+      'pages' => '',
+      'cache' => -1,
+      'title' => '',
+    ),
+    array(
+      'module' => 'multilingual_starterkit_setup',
+      'delta' => 'social_media',
+      'theme' => $default_theme,
+      'status' => 1,
+      'weight' => 1,
+      'region' => 'header',
+      'pages' => '',
+      'cache' => -1,
+      'title' => '',
     ),
     array(
       'module' => 'system',
@@ -146,6 +153,7 @@ function multilingual_starterkit_install() {
       'region' => 'help',
       'pages' => '',
       'cache' => -1,
+      'title' => '',
     ),
     array(
       'module' => 'system',
@@ -156,6 +164,7 @@ function multilingual_starterkit_install() {
       'region' => 'content',
       'pages' => '',
       'cache' => -1,
+      'title' => '',
     ),
     array(
       'module' => 'system',
@@ -166,39 +175,10 @@ function multilingual_starterkit_install() {
       'region' => 'help',
       'pages' => '',
       'cache' => -1,
-    ),
-    array(
-      'module' => 'user',
-      'delta' => 'login',
-      'theme' => $admin_theme,
-      'status' => 1,
-      'weight' => 10,
-      'region' => 'content',
-      'pages' => '',
-      'cache' => -1,
-    ),
-    array(
-      'module' => 'user',
-      'delta' => 'new',
-      'theme' => $admin_theme,
-      'status' => 1,
-      'weight' => 0,
-      'region' => 'dashboard_sidebar',
-      'pages' => '',
-      'cache' => -1,
-    ),
-    array(
-      'module' => 'search',
-      'delta' => 'form',
-      'theme' => $admin_theme,
-      'status' => 1,
-      'weight' => -10,
-      'region' => 'dashboard_sidebar',
-      'pages' => '',
-      'cache' => -1,
+      'title' => '',
     ),
   );
-  $query = db_insert('block')->fields(array('module', 'delta', 'theme', 'status', 'weight', 'region', 'pages', 'cache'));
+  $query = db_insert('block')->fields(array('module', 'delta', 'theme', 'status', 'weight', 'region', 'pages', 'cache', 'title'));
   foreach ($blocks as $block) {
     $query->values($block);
   }
@@ -246,8 +226,10 @@ function multilingual_starterkit_install() {
   variable_set('node_options_page', array('status'));
   variable_set('comment_page', COMMENT_NODE_HIDDEN);
 
-  // Don't display date and author information for "Basic page" nodes by default.
+  // Don't display date and author information for pages and events.
   variable_set('node_submitted_page', FALSE);
+  variable_set('node_submitted_event', FALSE);
+  variable_set('node_submitted_webform', FALSE);
 
   // Enable user picture support and set the default to a square thumbnail option.
   variable_set('user_pictures', '1');
@@ -882,6 +864,12 @@ function multilingual_starterkit_install() {
   //Turn off comments on events and webforms
   variable_set('comment_event', 0);
   variable_set('comment_webform', 0);
+
+  //Set the homepage to use the homepage panel
+  variable_set('site_frontpage', 'homepage');
+
+  //Set the site to use clean URLs
+  variable_set('clean_url', 1);
 
   #Set the language negotiation UI detection to use the URL/browser/default
   $language_negotiation_language = array('locale-url' => array('callbacks' => array('language' => 'locale_language_from_url', 'switcher' => 'locale_language_switcher_url', 'url_rewrite' => 'locale_language_url_rewrite_url'), 'file' => 'includes/locale.inc'), 'locale-browser' => array('callbacks' => array('language' => 'locale_language_from_browser'), 'file' => 'includes/locale.inc', 'cache' => 0), 'language-default' => array('callbacks' => array('language' => 'language_from_default')));

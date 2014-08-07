@@ -9,7 +9,6 @@ dependencies[] = color
 dependencies[] = comment
 dependencies[] = translation
 dependencies[] = contextual
-dependencies[] = dashboard
 dependencies[] = help
 dependencies[] = image
 dependencies[] = list
@@ -46,13 +45,18 @@ dependencies[] = i18n_field
 dependencies[] = i18n_block
 dependencies[] = l10n_update 
 dependencies[] = pathauto
+dependencies[] = panels
+dependencies[] = panels_ipe
+dependencies[] = page_manager
 dependencies[] = title
 dependencies[] = token
 dependencies[] = transliteration
 dependencies[] = variable
 dependencies[] = views
+dependencies[] = views_content
 dependencies[] = views_ui
 dependencies[] = views_bulk_operations
 
 ;Custom Dependencies
-dependencies[] = multilingual_starterkit_views
+dependencies[] = multilingual_starterkit_defaults
+dependencies[] = multilingual_starterkit_setup

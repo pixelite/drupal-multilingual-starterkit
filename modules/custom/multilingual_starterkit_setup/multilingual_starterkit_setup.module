@@ -1,0 +1,282 @@
+<?php
+/**
+ * Defines the settings form.
+ *
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * @param $form
+ *   Nested array of form elements that comprise the form.
+ * @param $form_state
+ *   A keyed array containing the current state of the form.
+ */
+
+function multilingual_starterkit_setup_form_system_site_information_settings_alter(&$form, &$form_state, $form_id) {
+  $form['multilingual_starterkit_banner'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Homepage Banner Settings'),
+  );
+  $form['multilingual_starterkit_banner']['multilingual_starterkit_banner_title'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('Homepage Banner Title'),
+    '#default_value' => variable_get_value('multilingual_starterkit_banner_title'),
+    '#description'   => t("The title that will appear below the banner image on the homepage."),
+  );
+  $form['multilingual_starterkit_banner']['multilingual_starterkit_banner_text'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('Homepage Banner Text'),
+    '#default_value' => variable_get_value('multilingual_starterkit_banner_text'),
+    '#description'   => t("Longer text below the banner image on the homepage."),
+  );
+  $form['multilingual_starterkit_banner']['multilingual_starterkit_banner_image'] = array(
+    '#type'          => 'file',
+    '#title'         => t('Homepage Banner Image'),
+    '#default_value' => variable_get_value('multilingual_starterkit_banner_image'),
+    '#upload_validators' => array(
+      'file_validate_extensions' => array('gif png jpg jpeg'),
+     ),
+    '#description'   => t("Upload an image to replace the homepage banner image."),
+  );
+  $form['multilingual_starterkit_banner']['multilingual_starterkit_banner_image_remove'] = array(
+    '#type'          => 'checkbox',
+    '#title'         => t('Remove the homepage banner image'),
+  );
+  $form['multilingual_starterkit_banner']['multilingual_starterkit_secondary_banner_image'] = array(
+    '#type'          => 'file',
+    '#title'         => t('Secondary Banner Image'),
+    '#default_value' => variable_get_value('multilingual_starterkit_secondary_banner_image'),
+    '#upload_validators' => array(
+      'file_validate_extensions' => array('gif png jpg jpeg'),
+     ),
+    '#description'   => t("Upload an image to replace the internal banner image."),
+  );
+  $form['multilingual_starterkit_banner']['multilingual_starterkit_secondary_banner_image_remove'] = array(
+    '#type'          => 'checkbox',
+    '#title'         => t('Remove the internal banner image'),
+  );
+  $form['multilingual_starterkit_text'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Page Template Settings'),
+  );
+  $form['multilingual_starterkit_text']['multilingual_starterkit_footer_text'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('Footer Text'),
+    '#default_value' => variable_get_value('multilingual_starterkit_footer_text'),
+    '#description'   => t('Enter some text for the footer of the website, such as your contact info.'),
+  );
+  $form['multilingual_starterkit_text']['multilingual_starterkit_background_image'] = array(
+    '#type'          => 'file',
+    '#title'         => t('Background Image'),
+    '#default_value' => variable_get_value('multilingual_starterkit_background_image'),
+    '#upload_validators' => array(
+      'file_validate_extensions' => array('gif png jpg jpeg'),
+     ),
+    '#description'   => t("Upload an image to replace the homepage banner image."),
+  );
+  $form['multilingual_starterkit_text']['multilingual_starterkit_background_image_remove'] = array(
+    '#type'          => 'checkbox',
+    '#title'         => t('Remove the background image'),
+  );
+  $form['multilingual_starterkit_social_media_links'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Sitewide Social Media Links'),
+  );
+  $form['multilingual_starterkit_social_media_links']['multilingual_starterkit_twitter'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Twitter Link'),
+    '#default_value' => variable_get('multilingual_starterkit_twitter'),
+  );
+  $form['multilingual_starterkit_social_media_links']['multilingual_starterkit_facebook'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Facebook Link'),
+    '#default_value' => variable_get('multilingual_starterkit_facebook'),
+  );
+  $form['multilingual_starterkit_social_media_links']['multilingual_starterkit_linkedin'] = array(
+    '#type' => 'textfield',
+    '#title' => t('LinkedIn Link'),
+    '#default_value' => variable_get('multilingual_starterkit_linkedin'),
+  );
+  $form['#validate'][] = 'multilingual_starterkit_setup_settings_validate';
+  $form['#submit'][] = 'multilingual_starterkit_setup_settings_submit';
+}
+
+/*
+ * Validation of the banner image.
+ */
+function multilingual_starterkit_setup_settings_validate(&$form, &$form_state) {
+  $banner_images = array('multilingual_starterkit_banner_image', 'multilingual_starterkit_secondary_banner_image', 'multilingual_starterkit_background_image');
+  foreach ($banner_images as $image) {
+    // Check for a new uploaded banner image.
+    $file = file_save_upload($image);
+    if (isset($file)) {
+      // File upload was attempted.
+      if ($file) {
+        // Put the temporary file in form_values so we can save it on submit.
+        $form_state['values'][$image] = $file;
+      }
+      else {
+        // File upload failed.
+        form_set_error($image, t('The banner image could not be uploaded.'));
+      }
+    }
+  }
+}
+
+/*
+ * Submission of the theme settings, particularly the banner image.
+ */
+function multilingual_starterkit_setup_settings_submit(&$form, &$form_state) {
+  $banner_images = array('multilingual_starterkit_banner_image', 'multilingual_starterkit_secondary_banner_image', 'multilingual_starterkit_background_image');
+  foreach ($banner_images as $image) {
+    if ($file = $form_state['values'][$image]) {
+      variable_set($image, $file);
+    }
+    // Remove the image if the remove checkbox is checked.
+    if ($form_state['values'][$image . '_remove']) {
+      variable_del($image);
+    }
+  }
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function multilingual_starterkit_setup_block_info() {
+  $blocks = array(
+    'footer_text' => array(
+      'info' => t('Multilingual Starterkit Footer'),
+    ),
+    'banner' => array(
+      'info' => t('Multilingual Starterkit Banner'),
+    ),
+    'social_media' => array(
+      'info' => t('Multilingual Starterkit Social Media Links'),
+    ),
+  );
+  return $blocks;
+}
+/**
+ * Implements hook_block_view().
+ */
+function multilingual_starterkit_setup_block_view($delta) {
+
+  $block = array();
+  switch ($delta) {
+    case 'footer_text':
+      $block['subject'] = '';
+      $block['content']['#markup'] = '<p>' . variable_get_value('multilingual_starterkit_footer_text') . '</p>';
+    return $block;
+    case 'banner':
+      if (drupal_is_front_page() && variable_get_value('multilingual_starterkit_banner_image')) {
+        $path_to_banner = file_unmanaged_copy(variable_get_value('multilingual_starterkit_banner_image')->uri);
+      } elseif (variable_get_value('multilingual_starterkit_secondary_banner_image')) {
+        $path_to_banner = file_unmanaged_copy(variable_get_value('multilingual_starterkit_secondary_banner_image')->uri);
+      } 
+      if (isset($path_to_banner)) {
+        $block['subject'] = '';
+        $block['content'] = multilingual_starterkit_get_banner($path_to_banner);
+      }
+    return $block;
+    case 'social_media':
+      $links_list = array('twitter','facebook','linkedin');
+      $social_media_links = array();
+      foreach ($links_list as $link) {
+        if ($url = variable_get_value('multilingual_starterkit_' . $link)) {
+          $image = theme('image', array('path' => path_to_theme() . '/images/' . $link . '.png', 'attributes' => array('alt' => t('Follow us on Twitter'))));
+          $social_media_links[$link] = array('#markup' => l($image, $url, array('html' => TRUE)));
+        }
+      }
+      $block['subject'] = '';
+      $block['content'] = $social_media_links;
+    return $block;
+  }
+}
+/*
+ * Helper function to return banner as renderable array.
+ */
+
+function multilingual_starterkit_get_banner($path) {
+  $banner = array(
+    '#prefix' => '<div class="homepage-banner">',
+    'markup' => array(
+      '#markup' => theme('image', array('path' => $path, 'alt' => t('Welcome Banner'))),
+    ),
+    '#suffix' => '</div>',
+  );
+  // Add banner text to the frontpage banner.
+  if (drupal_is_front_page()) {
+    $banner['banner_text'] = array(
+      '#prefix' => '<div class="homepage-banner-text">',
+      'markup' => array(
+        '#markup' => '<h2>' . variable_get_value('multilingual_starterkit_banner_title') . '</h2>' .'<p>' . variable_get_value('multilingual_starterkit_banner_text') . '</p>',
+      ),
+      '#suffix' => '</div>',
+    );
+    $banner['banner_text']['banner_call_to_action'] = array(
+      '#prefix' => '<div class="homepage-banner-call-to-action">',
+      '#markup' => l(t('Learn More'), 'node/1'),
+      '#suffix' => '</div>',
+    );
+    $banner['banner_text']['banner_contact_us'] = array(
+      '#prefix' => '<div class="homepage-banner-call-to-action">',
+      '#markup' => l(t('Contact Us'), 'node/4'),
+      '#suffix' => '</div>',
+    );
+  }
+  return $banner;
+}
+
+/*
+ * Implements hook_variable_info().
+ */
+function multilingual_starterkit_setup_variable_info($options) {
+  $variable = array();
+  $variable['multilingual_starterkit_banner_image'] = array(
+    'name' => 'multilingual_starterkit_banner_image',
+    'type' => 'string',
+    'group' => 'site_information',
+    'title' => t('Multilingual starterkit banner image'),
+    'description' => t('Banner image used on the homepage of the website.'),
+  ); 
+  $variable['multilingual_starterkit_secondary_banner_image'] = array(
+    'name' => 'multilingual_starterkit_secondary_banner_image',
+    'type' => 'string',
+    'group' => 'site_information',
+    'title' => t('Multilingual starterkit secondary banner image'),
+    'description' => t('Banner image used on the internal pages of the website.'),
+  ); 
+  $variable['multilingual_starterkit_background_image'] = array(
+    'name' => 'multilingual_starterkit_background_image',
+    'type' => 'string',
+    'group' => 'site_information',
+    'title' => t('Multilingual starterkit background image'),
+    'description' => t('Background image used on all pages of the website.'),
+  ); 
+  $variable['multilingual_starterkit_banner_title'] = array(
+    'name' => 'multilingual_starterkit_banner_title',
+    'type' => 'string',
+    'group' => 'site_information',
+    'default' => 'Listen Up Y\'all',
+    'localize' => TRUE,
+    'title' => t('Multilingual starterkit banner title'),
+    'description' => t('Title text that appears below the banner on the homepage of the website'),
+  ); 
+  $variable['multilingual_starterkit_banner_text'] = array(
+    'name' => 'multilingual_starterkit_banner_text',
+    'type' => 'string',
+    'group' => 'site_information',
+    'default' => 'Because everyone needs a hammer and everyone needs a shovel, and you need to buy our products and services.',
+    'localize' => TRUE,
+    'title' => t('Multilingual starterkit banner text'),
+    'description' => t('Smaller text that appears below the banner on the homepage of the website'),
+  ); 
+  $variable['multilingual_starterkit_footer_text'] = array(
+    'name' => 'multilingual_starterkit_footer_text',
+    'type' => 'string',
+    'group' => 'site_information',
+    'default' => 'Evolving Web Inc. | 114-300 Saint-Sacrement, Montreal QC | 514-944-4930',
+    'localize' => TRUE,
+    'title' => t('Multilingual starterkit footer text'),
+    'description' => t('Text to appear in the footer of every page of the website, usually contact or copyright information.'),
+  ); 
+  return $variable;
+}

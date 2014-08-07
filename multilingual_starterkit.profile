@@ -170,13 +170,13 @@ function multilingual_starterkit_site_info($form, &$form_state, &$install_state)
     $form[$langcode]['site_name_' . $langcode] = array(
       '#title' => $language . ' ' . st('Site name'),
       '#type' => 'textfield',
-      '#default_value' => st('!language website', array('%language' => $language)),
+      '#default_value' => $language . ' website',
       '#required' => TRUE,
     );
     $form[$langcode]['site_slogan_' . $langcode] = array(
       '#title' => $language . ' ' . st('Site slogan'),
       '#type' => 'textfield',
-      '#default_value' => st('!language multilingual slogan', array('%language' => $language)),
+      '#default_value' => $language . ' multilingual slogan',
       '#required' => TRUE,
     );
     $form[$langcode]['article_label_' . $langcode] = array(
@@ -364,8 +364,8 @@ function multilingual_starterkit_sample_webforms_submit($form, &$form_state) {
 */
 function multilingual_starterkit_sample_content(&$install_state) {
   //Create a page and set it to be the homepage of the website
-  if ($welcome_node = _multilingual_starterkit_create_node('page')) {
-    variable_set('site_frontpage', 'node/' . $welcome_node->nid);
+  if ($page_node = _multilingual_starterkit_create_node('page')) {
+     _multilingual_starterkit_create_menu_item('und', 'node/' . $page_node->nid, 'About', 0, 0);
   }
 
   //Create an article and event node
@@ -391,7 +391,12 @@ function _multilingual_starterkit_create_node($page_type) {
   $node->status = 1;
 
   foreach ($installed_languages as $langcode => $language) {
-    $node->title_field[$langcode][0]['value'] = 'Title of the ' . $page_type . ' in ' . $language;
+    if ($page_type == 'page') {
+      $title = 'About Us';
+    } else {
+      $title = 'Title of the ' . $page_type . ' in ' . $language;
+    }
+    $node->title_field[$langcode][0]['value'] = $title;
     $node->body[$langcode][0]['value'] = 'The body of the node in ' . $language;
     $node->body[$langcode][0]['value'] = 'The body of the node in ' . $language;
     $node->body[$langcode][0]['format'] = 'full_html';
@@ -492,7 +497,7 @@ function _multilingual_starterkit_create_webform($langcode, $values) {
 }
 
 /*
- * Helper function to set up menu links for articles and events Views
+ * Helper function to set up menu links.
  */
 function _multilingual_starterkit_create_menu_item($langcode, $link_path, $link_title, $weight, $tsid) {
 

@@ -1,0 +1,50 @@
+.block {
+  margin-bottom: 1em;
+}
+#block-locale-language ul {
+  margin-top: 0;
+  padding-left: 0;
+}
+#block-locale-language li {
+  list-style-type: none;
+  list-style-image: none;
+  display: inline-block;
+  font-family: $montserrat;
+  font-size: .8em;
+  margin: $base-line-height/4;
+  text-transform: uppercase;
+  a {
+    @include button;
+    text-decoration: none;
+    &.active {
+      background: #999;
+    }
+    abbr {
+      border-bottom: none;
+    }
+  }
+}
+
+/*Search*/
+
+#search-form,
+#block-search-form,
+#search-block-form {
+  input.form-text {
+    padding: 2px;
+    width: 200px;
+  }
+  input.form-submit {
+    @include button;
+  }
+}
+
+/*Social Media Block*/
+
+#block-multilingual-starterkit-setup-social-media img {
+  width: 30px;
+  height: 30px;
+  margin: 5px;
+}
+
+

@@ -1,0 +1,4 @@
+name = Multilingual Starterkit Setup
+core = 7.x
+dependencies[] = variable
+package = Multilingual Starterkit

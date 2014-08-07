@@ -1,0 +1,31 @@
+.views-field-field-date,
+.views-field-created {
+  font-size: .9em;
+  color: #999;
+}
+.views-row {
+  margin: $base-line-height 0;
+}
+
+
+@media all and (min-width: 480px) {
+  .view-events,
+  .view-articles {
+    .field-name-field-image {
+      float: left;
+      margin-right: $base-line-height;
+    }
+  }
+}
+@media all and (min-width: 960px) {
+  .view-events,
+  .view-articles {
+    .field-name-body {
+      @include columns(2em 2);
+      p {
+        margin-top: 0;
+        margin-bottom: $base-line-height;
+      }
+    }
+  }
+}
